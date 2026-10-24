@@ -3,3 +3,9 @@ __pycache__/
 *.py[cod]
 .env
 .DS_Store
+
+# Local backup files
+main.py.save
+main_broken_backup.py
+resqflow_backup.sql
+static/index.html.backup
