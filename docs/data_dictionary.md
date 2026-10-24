@@ -1,81 +1,52 @@
-# ResQFlow Data Dictionary
+# ResQFlow Database Data Dictionary
 
-This document describes the current six-table ResQFlow PostgreSQL schema.
-The diagram and definitions should be updated if `database/schema.sql` changes.
+## Overview
 
-## 1. `incident_types`
-Stores the categories of emergencies.
+ResQFlow uses a PostgreSQL database to store emergency reports, ambulance information, and ambulance assignments. The database contains three tables.
 
-| Column | Meaning | Rule |
-|---|---|---|
-| `incident_type_id` | Unique ID for each incident type | Primary key, auto-generated |
-| `type_name` | Name such as Medical Emergency, Fire, Road Accident, Rescue | Unique, required |
+## 1. emergency_reports
 
-## 2. `resource_types`
-Stores categories of response resources.
+Stores information about reported emergencies.
 
-| Column | Meaning | Rule |
-|---|---|---|
-| `resource_type_id` | Unique ID for each resource type | Primary key, auto-generated |
-| `type_name` | Name such as Ambulance, Fire Engine, Police, Rescue Team | Unique, required |
+| Column | Description |
+|---|---|
+| `report_id` | Unique ID for each emergency; primary key |
+| `emergency_type` | Type of emergency |
+| `location` | Location of the emergency |
+| `severity` | Severity level of the emergency |
+| `reported_at` | Date and time the emergency was reported |
+| `status` | Current status; defaults to `Pending` |
 
-## 3. `incidents`
-Stores reported emergency incidents.
+## 2. ambulances
 
-| Column | Meaning | Rule |
-|---|---|---|
-| `incident_id` | Unique incident ID | Primary key, auto-generated |
-| `incident_type_id` | Category of incident | Foreign key to `incident_types` |
-| `description` | Text describing the incident | Required |
-| `severity` | Severity score from 1 to 5 | Check constraint |
-| `latitude` | Incident latitude | Optional coordinate |
-| `longitude` | Incident longitude | Optional coordinate |
-| `status` | Current incident status | Defaults to `OPEN` |
-| `created_at` | Time the row was created | Defaults to current timestamp |
+Stores ambulance details and availability.
 
-## 4. `resources`
-Stores response units that may be assigned to incidents.
+| Column | Description |
+|---|---|
+| `ambulance_id` | Unique ID for each ambulance; primary key |
+| `ambulance_name` | Name or identifier of the ambulance |
+| `location` | Current recorded location |
+| `status` | Availability status; defaults to `Available` |
 
-| Column | Meaning | Rule |
-|---|---|---|
-| `resource_id` | Unique resource ID | Primary key, auto-generated |
-| `resource_type_id` | Category of resource | Foreign key to `resource_types` |
-| `resource_code` | Human-readable code such as `AMB-001` | Unique, required |
-| `latitude` | Resource latitude | Optional coordinate |
-| `longitude` | Resource longitude | Optional coordinate |
-| `status` | Availability or current status | Defaults to `AVAILABLE` |
+## 3. assignments
 
-## 5. `incident_resource_needs`
-Stores how many units of each resource type an incident needs.
+Records which ambulance is assigned to which emergency.
 
-| Column | Meaning | Rule |
-|---|---|---|
-| `need_id` | Unique need record ID | Primary key, auto-generated |
-| `incident_id` | Incident requiring resources | Foreign key to `incidents`, cascade delete |
-| `resource_type_id` | Type of resource needed | Foreign key to `resource_types` |
-| `required_count` | Number of units needed | Must be zero or greater |
-| `(incident_id, resource_type_id)` | Prevents duplicate need rows for the same incident and type | Unique combination |
-
-## 6. `resource_assignments`
-Records which resources are assigned to which incidents.
-
-| Column | Meaning | Rule |
-|---|---|---|
-| `assignment_id` | Unique assignment record ID | Primary key, auto-generated |
-| `incident_id` | Incident receiving a resource | Foreign key to `incidents` |
-| `resource_id` | Resource being assigned | Foreign key to `resources` |
-| `assigned_at` | Time of assignment | Defaults to current timestamp |
-| `status` | Assignment status | Defaults to `ASSIGNED` |
-| `(resource_id, incident_id)` | Prevents duplicate assignment of the same resource to the same incident | Unique combination |
+| Column | Description |
+|---|---|
+| `assignment_id` | Unique ID for each assignment; primary key |
+| `report_id` | References `emergency_reports.report_id` |
+| `ambulance_id` | References `ambulances.ambulance_id` |
+| `assigned_at` | Date and time of assignment |
+| `estimated_response_minutes` | Demonstration estimate of response time in minutes |
 
 ## Relationships
-- One incident type can be associated with many incidents.
-- One resource type can be associated with many resources.
-- One incident can have multiple resource-need records.
-- One resource type can appear in many resource-need records.
-- Incidents and resources can be linked through `resource_assignments`; each row records one resource assigned to one incident.
 
-## Notes and limitations
-- Sample locations and incidents are fictional and are for academic demonstration only.
-- The current schema is a simplified version. Confirm that this document matches the actual `database/schema.sql` before submission.
-- This prototype is not a real emergency dispatch service.
+- One emergency report can have assignment records associated with it.
+- One ambulance can have assignment records associated with it.
+- `assignments.report_id` references `emergency_reports.report_id`.
+- `assignments.ambulance_id` references `ambulances.ambulance_id`.
+
+## Important Note
+
+The response-time value is a demonstration estimate, not a real-time travel calculation. The schema defines foreign-key relationships but does not enforce that each emergency or ambulance can appear in only one assignment.
