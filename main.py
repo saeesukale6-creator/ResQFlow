@@ -208,3 +208,43 @@ def get_assignments():
         }
         for row in rows
     ]
+
+
+# Machine Learning: Emergency Demand Prediction
+from pathlib import Path
+import joblib
+import pandas as pd
+
+MODEL_PATH = Path(__file__).resolve().parent / "data" / "emergency_demand_model.pkl"
+demand_model = joblib.load(MODEL_PATH)
+
+
+@app.get("/predict-demand")
+def predict_demand(location: str, hour: int, day_of_week: int):
+    if not location.strip():
+        raise HTTPException(status_code=400, detail="Location is required")
+
+    if hour < 0 or hour > 23:
+        raise HTTPException(status_code=400, detail="Hour must be between 0 and 23")
+
+    if day_of_week < 0 or day_of_week > 6:
+        raise HTTPException(status_code=400, detail="Day of week must be between 0 and 6")
+
+    input_data = pd.DataFrame([{
+        "location": location.strip(),
+        "hour": hour,
+        "day_of_week": day_of_week
+    }])
+
+    prediction = demand_model.predict(input_data)[0]
+    estimated_demand = max(0, round(float(prediction)))
+
+    return {
+        "location": location.strip(),
+        "hour": hour,
+        "day_of_week": day_of_week,
+        "predicted_emergency_demand": estimated_demand,
+        "unit": "estimated emergencies per observation period",
+        "model": "Random Forest Regressor",
+        "data_note": "Demonstration prediction based on simulated training data; not a real-world forecast."
+    }
