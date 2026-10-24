@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import psycopg
 
@@ -95,3 +96,9 @@ def get_ambulances():
         }
         for row in rows
     ]
+
+
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse("static/index.html")
