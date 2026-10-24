@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import psycopg
@@ -7,17 +6,21 @@ app = FastAPI(title="ResQFlow API")
 
 DATABASE_URL = "postgresql:///resqflow"
 
+
 class EmergencyReport(BaseModel):
     emergency_type: str
     location: str
     severity: str
 
+
 def get_connection():
     return psycopg.connect(DATABASE_URL)
+
 
 @app.get("/")
 def home():
     return {"message": "ResQFlow API is running"}
+
 
 @app.get("/emergencies")
 def get_emergencies():
@@ -43,6 +46,7 @@ def get_emergencies():
         for row in rows
     ]
 
+
 @app.post("/emergencies")
 def create_emergency(report: EmergencyReport):
     if report.severity not in ["Low", "Medium", "High", "Critical"]:
@@ -54,6 +58,23 @@ def create_emergency(report: EmergencyReport):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
+                INSERT INTO emergency_reports
+                    (emergency_type, location, severity)
+                VALUES (%s, %s, %s)
+                RETURNING report_id
+            """, (
+                report.emergency_type,
+                report.location,
+                report.severity
+            ))
+            report_id = cur.fetchone()[0]
+
+    return {
+        "message": "Emergency report created successfully",
+        "report_id": report_id
+    }
+
+
 @app.get("/ambulances")
 def get_ambulances():
     with get_connection() as conn:
@@ -73,19 +94,4 @@ def get_ambulances():
             "status": row[3]
         }
         for row in rows
-    ]                INSERT INTO emergency_reports
-                    (emergency_type, location, severity)
-                VALUES (%s, %s, %s)
-                RETURNING report_id
-            """, (
-                report.emergency_type,
-                report.location,
-                report.severity
-            ))
-            report_id = cur.fetchone()[0]
-
-    return {
-        "message": "Emergency report created successfully",
-        "report_id": report_id
-    }
-
+    ]
