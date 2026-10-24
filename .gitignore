@@ -9,3 +9,6 @@ main.py.save
 main_broken_backup.py
 resqflow_backup.sql
 static/index.html.backup
+
+# Local Python virtual environment
+venv/
