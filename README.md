@@ -123,7 +123,7 @@ Detailed instructions and required commands will be added as the project is impl
 | Name | Roll Number | 
 |---|---|---|
 | Nikita Kulkarni | 1262241563 | 
-| Friend's Name | 1262241881 | 
+| Saee Sukale | 1262241881 | 
 
 Replace the example details with your actual team information and update responsibilities according to the work you both perform.
 
