@@ -7,10 +7,7 @@
   <a href="https://resqflow-emergency-eosin.vercel.app/">
     <img src="https://img.shields.io/badge/Live%20Website-Visit%20ResQFlow-2563EB?style=for-the-badge" alt="Visit ResQFlow">
   </a>
-  <a>
-    <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub Repository">
-  </a>
-
+  
 </p>
 
 ## 🌐 Live Demo
