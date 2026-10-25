@@ -5,7 +5,7 @@
 <p align="center">
 
   <a href="https://resqflow-emergency-eosin.vercel.app/">
-    <img src="https://img.shields.io/badge/Live%20Website-Visit%20ResQFlow-2563EB?style=for-the-badge" alt="Visit ResQFlow">
+    
   </a>
   
 </p>
@@ -14,7 +14,7 @@
 
 **Website:** https://resqflow-emergency-eosin.vercel.app/
 
-**GitHub Repository:** https://github.com/saeesukale6-creator/ResQFlow
+
 
 ResQFlow is an academic project designed to demonstrate how database systems and intelligent resource allocation can support emergency response management.
 
