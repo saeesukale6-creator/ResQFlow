@@ -9,11 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 app = FastAPI(title="ResQFlow API")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://resqflow-emergency-eosin.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
