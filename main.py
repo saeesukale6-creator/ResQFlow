@@ -2,11 +2,28 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import psycopg
+import os
+from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 
 app = FastAPI(title="ResQFlow API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-DATABASE_URL = "postgresql:///resqflow"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is missing. Check your .env file.")
 
 class EmergencyReport(BaseModel):
     emergency_type: str
@@ -23,13 +40,15 @@ def home():
     return {"message": "ResQFlow API is running"}
 
 
+
 @app.get("/emergencies")
 def get_emergencies():
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT report_id, emergency_type, location,
-                       severity, reported_at, status
+                       severity, reported_at, status,
+                       latitude, longitude
                 FROM emergency_reports
                 ORDER BY reported_at DESC
             """)
@@ -42,10 +61,13 @@ def get_emergencies():
             "location": row[2],
             "severity": row[3],
             "reported_at": row[4].isoformat() if row[4] else None,
-            "status": row[5]
+            "status": row[5],
+            "latitude": row[6],
+            "longitude": row[7]
         }
         for row in rows
     ]
+
 
 
 @app.post("/emergencies")
@@ -108,20 +130,32 @@ class AssignmentRequest(BaseModel):
     report_id: int
 
 
+
+class AssignmentRequest(BaseModel):
+    report_id: int
+    ambulance_id: int
+
+
 @app.post("/assign-ambulance")
 def assign_ambulance(request: AssignmentRequest):
     with get_connection() as conn:
         with conn.cursor() as cur:
+
+            # 1. Check and lock the emergency report
             cur.execute("""
                 SELECT report_id, location, status
                 FROM emergency_reports
                 WHERE report_id = %s
                 FOR UPDATE
             """, (request.report_id,))
+
             emergency = cur.fetchone()
 
             if not emergency:
-                raise HTTPException(status_code=404, detail="Emergency not found")
+                raise HTTPException(
+                    status_code=404,
+                    detail="Emergency not found"
+                )
 
             if emergency[2] != "Pending":
                 raise HTTPException(
@@ -129,41 +163,60 @@ def assign_ambulance(request: AssignmentRequest):
                     detail="Only pending emergencies can be assigned"
                 )
 
+            # 2. Check and lock the ambulance selected by the user
             cur.execute("""
-                SELECT ambulance_id, ambulance_name, location
+                SELECT ambulance_id, ambulance_name, location, status
                 FROM ambulances
-                WHERE status = 'Available'
-                ORDER BY
-                    CASE WHEN LOWER(location) = LOWER(%s) THEN 0 ELSE 1 END,
-                    ambulance_id
-                LIMIT 1
+                WHERE ambulance_id = %s
                 FOR UPDATE
-            """, (emergency[1],))
+            """, (request.ambulance_id,))
+
             ambulance = cur.fetchone()
 
             if not ambulance:
                 raise HTTPException(
-                    status_code=409,
-                    detail="No available ambulances"
+                    status_code=404,
+                    detail="Selected ambulance not found"
                 )
 
-            # Demo estimate only; this is not a real travel-time calculation.
-            estimated_minutes = 10 if ambulance[2].lower() == emergency[1].lower() else 20
+            if ambulance[3] != "Available":
+                raise HTTPException(
+                    status_code=409,
+                    detail="Selected ambulance is no longer available"
+                )
 
+            # 3. Calculate a simple demo estimate
+            estimated_minutes = (
+                10
+                if ambulance[2].strip().lower()
+                == emergency[1].strip().lower()
+                else 20
+            )
+
+            # This is a demo estimate, not real GPS travel time.
+
+            # 4. Save the assignment
             cur.execute("""
                 INSERT INTO assignments
                     (report_id, ambulance_id, estimated_response_minutes)
                 VALUES (%s, %s, %s)
                 RETURNING assignment_id, assigned_at
-            """, (request.report_id, ambulance[0], estimated_minutes))
+            """, (
+                request.report_id,
+                ambulance[0],
+                estimated_minutes
+            ))
+
             assignment = cur.fetchone()
 
+            # 5. Update emergency status
             cur.execute("""
                 UPDATE emergency_reports
                 SET status = 'Assigned'
                 WHERE report_id = %s
             """, (request.report_id,))
 
+            # 6. Mark the selected ambulance as busy
             cur.execute("""
                 UPDATE ambulances
                 SET status = 'Busy'
@@ -179,6 +232,7 @@ def assign_ambulance(request: AssignmentRequest):
         "estimated_response_minutes": estimated_minutes,
         "assigned_at": assignment[1].isoformat()
     }
+
 
 
 @app.get("/assignments")
@@ -210,41 +264,164 @@ def get_assignments():
     ]
 
 
-# Machine Learning: Emergency Demand Prediction
-from pathlib import Path
-import joblib
-import pandas as pd
 
-MODEL_PATH = Path(__file__).resolve().parent / "data" / "emergency_demand_model.pkl"
-demand_model = joblib.load(MODEL_PATH)
+# Machine Learning: Emergency Demand Prediction
+# Trains a Random Forest using historical PostgreSQL records.
+
+from datetime import datetime
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestRegressor
 
 
 @app.get("/predict-demand")
-def predict_demand(location: str, hour: int, day_of_week: int):
+def predict_demand(
+    location: str,
+    hour: int,
+    day_of_week: int
+):
     if not location.strip():
-        raise HTTPException(status_code=400, detail="Location is required")
+        raise HTTPException(
+            status_code=400,
+            detail="Location is required"
+        )
 
     if hour < 0 or hour > 23:
-        raise HTTPException(status_code=400, detail="Hour must be between 0 and 23")
+        raise HTTPException(
+            status_code=400,
+            detail="Hour must be between 0 and 23"
+        )
 
     if day_of_week < 0 or day_of_week > 6:
-        raise HTTPException(status_code=400, detail="Day of week must be between 0 and 6")
+        raise HTTPException(
+            status_code=400,
+            detail="Day of week must be between 0 and 6"
+        )
 
+    # Get historical emergencies from PostgreSQL.
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT location, reported_at
+                FROM emergency_reports
+                WHERE reported_at IS NOT NULL
+            """)
+            rows = cur.fetchall()
+
+    if len(rows) < 48:
+        return {
+            "status": "insufficient_data",
+            "message": (
+                "At least 48 historical emergency reports "
+                "are recommended before training this model."
+            ),
+            "historical_reports": len(rows),
+            "predicted_emergency_demand": None
+        }
+
+    df = pd.DataFrame(
+        rows,
+        columns=["location", "reported_at"]
+    )
+
+    df["location"] = df["location"].astype(str).str.strip()
+    df["reported_at"] = pd.to_datetime(
+        df["reported_at"], errors="coerce"
+    )
+    df = df.dropna(subset=["reported_at"])
+    df = df[df["location"] != ""]
+
+    if len(df) < 48:
+        return {
+            "status": "insufficient_data",
+            "message": "Not enough valid historical records.",
+            "predicted_emergency_demand": None
+        }
+
+    # Extract features from each emergency timestamp.
+    df["hour"] = df["reported_at"].dt.hour
+    df["day_of_week"] = df["reported_at"].dt.dayofweek
+
+    # Build training examples: reports per location/hour/day.
+    training = (
+        df.groupby(
+            ["location", "hour", "day_of_week"]
+        )
+        .size()
+        .reset_index(name="emergency_count")
+    )
+
+    if len(training) < 10:
+        return {
+            "status": "insufficient_data",
+            "message": (
+                "Not enough distinct location/time patterns "
+                "to train the model reliably."
+            ),
+            "historical_reports": len(df),
+            "training_patterns": len(training),
+            "predicted_emergency_demand": None
+        }
+
+    features = ["location", "hour", "day_of_week"]
+
+    X = training[features]
+    y = training["emergency_count"]
+
+    # Encode locations and train the Random Forest model.
+    preprocessor = ColumnTransformer(
+        transformers=[
+            (
+                "location",
+                OneHotEncoder(handle_unknown="ignore"),
+                ["location"]
+            )
+        ],
+        remainder="passthrough"
+    )
+
+    model = Pipeline([
+        ("preprocessor", preprocessor),
+        (
+            "regressor",
+            RandomForestRegressor(
+                n_estimators=100,
+                random_state=42,
+                min_samples_leaf=2
+            )
+        )
+    ])
+
+    model.fit(X, y)
+
+    # Generate the requested prediction.
     input_data = pd.DataFrame([{
         "location": location.strip(),
         "hour": hour,
         "day_of_week": day_of_week
     }])
 
-    prediction = demand_model.predict(input_data)[0]
-    estimated_demand = max(0, round(float(prediction)))
+    prediction = float(model.predict(input_data)[0])
+    estimated_demand = max(0, round(prediction))
 
     return {
+        "status": "success",
         "location": location.strip(),
         "hour": hour,
         "day_of_week": day_of_week,
         "predicted_emergency_demand": estimated_demand,
-        "unit": "estimated emergencies per observation period",
+        "unit": (
+            "estimated emergency reports for this "
+            "location/hour/day-of-week pattern"
+        ),
         "model": "Random Forest Regressor",
-        "data_note": "Demonstration prediction based on simulated training data; not a real-world forecast."
+        "historical_reports": len(df),
+        "training_patterns": len(training),
+        "data_note": (
+            "Experimental prediction trained on historical "
+            "database records. Accuracy has not been independently "
+            "validated. Simulated records can produce misleading results."
+        )
     }
