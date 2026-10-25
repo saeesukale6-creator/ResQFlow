@@ -1,132 +1,304 @@
-# ResQFlow – Emergency Response Management System
+# 🚨 ResQFlow – Emergency Response Management System
 
-## 1. Project Description
+**A database-driven emergency response management and resource allocation system.**
 
-ResQFlow is a database-driven emergency response management system developed as an academic project.
+<p align="center">
 
-The system allows a person or dispatcher to report an emergency through a website. It stores the incident details in a database and helps the dispatcher identify the nearest available emergency response teams.
+  <a href="https://resqflow-emergency-eosin.vercel.app/">
+    <img src="https://img.shields.io/badge/Live%20Website-Visit%20ResQFlow-2563EB?style=for-the-badge" alt="Visit ResQFlow">
+  </a>
+  <a>
+    <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub Repository">
+  </a>
 
-The system supports four types of response teams:
+</p>
 
-- Ambulance
-- Fire engine
-- Police
-- Rescue team
+## 🌐 Live Demo
 
-Based on the type and severity of an incident, ResQFlow recommends suitable available teams. The dispatcher can review the recommendations, confirm assignments, and update the incident status.
+**Website:** https://resqflow-emergency-eosin.vercel.app/
 
-**Important:** ResQFlow is a student prototype only. It is not connected to real emergency services. For real emergencies in India, call 112.
+**GitHub Repository:** https://github.com/saeesukale6-creator/ResQFlow
 
-## 2. Objectives
+ResQFlow is an academic project designed to demonstrate how database systems and intelligent resource allocation can support emergency response management.
 
-- To develop a database system for managing emergency incidents.
-- To store incident details and emergency team information.
-- To identify the teams required for different types of incidents.
-- To recommend nearby available emergency response teams.
-- To help dispatchers manage team assignments and incident status.
-- To compare a basic allocation method with an optimization method.
-- To explore machine learning for forecasting emergency demand.
+> **Safety Notice:** ResQFlow is a student prototype and is not connected to real emergency services. Do not use it to report real emergencies. In India, call **112** for emergency assistance.
 
-## 3. Main Features
+---
 
-- Emergency incident reporting through an SOS web page.
-- Dispatcher dashboard for viewing and managing incidents.
-- Storage of incident, resource, and assignment details.
-- Automatic identification of required response teams.
-- Recommendation of nearby available teams using location coordinates.
-- Manual confirmation of recommended assignments.
-- Incident status tracking and history.
-- Baseline allocation and Integer Linear Programming (ILP) optimization.
-- Optional machine-learning-based demand forecasting.
-- Database constraints to maintain data accuracy.
+## 📌 1. Project Overview
 
-## 4. Technologies Used
+ResQFlow is a web-based Emergency Response Management System that helps users report emergencies and enables dispatchers to manage incidents and emergency response resources.
 
-- **Frontend:** HTML, CSS, JavaScript
-- **Backend:** Python, FastAPI
-- **Database:** PostgreSQL
-- **Database interface:** pgAdmin
-- **Optimization:** Google OR-Tools
-- **Machine learning:** scikit-learn, pandas, NumPy
-- **Testing:** pytest
-- **Version control:** Git and GitHub
+The system stores emergency information in a PostgreSQL database and provides a platform for viewing incident records and managing emergency response operations.
 
-## 5. How the System Works
+Based on the type, severity, and location of an incident, the system is designed to recommend suitable available response teams. Dispatchers can review recommendations, confirm assignments, and monitor incident status.
 
-1. A person reports an emergency using the SOS page, or a dispatcher records an incident.
-2. The backend validates the information and saves the incident in PostgreSQL.
-3. The system identifies the default response teams required for that incident type.
-4. The allocation logic recommends suitable available teams based on their recorded coordinates.
-5. The dispatcher reviews and confirms the assignment.
-6. The system updates the incident status, team availability, and assignment history.
-7. The dispatcher can monitor the incident until it is completed or cancelled.
+The project focuses on database management, backend API development, web application design, and resource allocation.
 
-## 6. Project Structure
+## 🎯 2. Objectives
+
+- Develop a database-driven system for managing emergency incidents.
+- Store and retrieve incident, resource, and assignment information.
+- Organize emergency response resources according to their type and availability.
+- Recommend suitable response teams based on incident requirements and location.
+- Help dispatchers review assignments and update incident status.
+- Explore and compare baseline resource allocation with Integer Linear Programming (ILP).
+- Investigate machine-learning techniques for emergency demand forecasting.
+- Maintain data accuracy using database constraints and validation.
+
+## ✨ 3. Main Features
+
+### Emergency Reporting
+- Web-based interface for recording emergency details.
+- Capture emergency type, location, and severity.
+- Store emergency reports through the backend API.
+
+### Dispatcher Dashboard
+- View emergency records.
+- Review incident details and status.
+- Support emergency record management.
+
+### Emergency Resource Management
+The system is designed to support four types of emergency response teams:
+
+- 🚑 Ambulance
+- 🚒 Fire engine
+- 🚓 Police
+- 🛟 Rescue team
+
+### Resource Allocation
+- Identify response resources suitable for an incident.
+- Consider resource availability and recorded location coordinates.
+- Recommend teams for dispatcher review and confirmation.
+
+### Incident Tracking
+- Track incident status throughout the response process.
+- Maintain assignment information and incident history where implemented.
+
+### Future Enhancements
+- Integer Linear Programming (ILP) optimization using Google OR-Tools.
+- Machine-learning-based emergency demand forecasting.
+- Automated comparison of baseline and optimized allocation methods.
+- Expanded automated testing and performance evaluation.
+
+*Features listed as future enhancements should be considered under development until they are implemented and tested.*
+
+## 🛠️ 4. Technologies Used
+
+| Component | Technology |
+|---|---|
+| Frontend | React, Vite, JavaScript, CSS |
+| Backend | Python, FastAPI |
+| Database | PostgreSQL |
+| Database Administration | pgAdmin 4 |
+| API Testing | FastAPI Swagger UI |
+| Deployment – Frontend | Vercel |
+| Deployment – Backend | Render |
+| Version Control | Git and GitHub |
+| Optimization – Planned | Google OR-Tools |
+| Machine Learning – Planned | scikit-learn, pandas, NumPy |
+| Testing – Planned/Developing | pytest |
+
+## ⚙️ 5. How ResQFlow Works
+
+1. **Report an emergency:** A user or dispatcher enters the incident details.
+2. **Validate the request:** The FastAPI backend receives the request and validates the submitted information.
+3. **Store the data:** Valid emergency information is saved in the PostgreSQL database.
+4. **Review the incident:** The dispatcher views the emergency record through the web interface.
+5. **Recommend resources:** The allocation module can identify suitable available teams based on the incident requirements and recorded coordinates, where implemented.
+6. **Confirm assignments:** The dispatcher reviews and confirms recommended assignments.
+7. **Track progress:** Incident status and assignment information can be updated as the response progresses.
+
+The workflow depends on the features currently implemented in the deployed application.
+
+## 🏗️ 6. System Architecture
 
 ```text
-ResQFlow-DBMS/
+        User / Dispatcher
+                |
+                v
+       React + Vite Frontend
+             (Vercel)
+                |
+                | HTTP Requests / REST API
+                v
+          FastAPI Backend
+             (Render)
+                |
+                v
+        PostgreSQL Database
+                |
+                v
+       Emergency Records
+       Resources & Assignments
+```
+
+The frontend communicates with the backend API, while the backend handles application logic and database operations.
+
+## 📂 7. Project Structure
+
+The following is a simplified view of the current project and its intended organization. Individual files and modules may change as development progresses.
+
+```text
+ResQFlow/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-├── .env
-├── database/
-│   ├── schema.sql
-│   ├── sample_data.sql
-│   └── queries.sql
+├── main.py
 ├── backend/
-│   ├── main.py
-│   ├── db.py
-│   ├── allocation.py
-│   └── ilp.py
+│   └── db.py
+├── database/
+│   └── render_schema.sql
 ├── frontend/
 │   ├── index.html
-│   └── dispatcher.html
-├── ml/
-│   └── forecast.py
-├── tests/
-│   ├── test_allocation.py
-│   └── compare.py
+│   ├── package.json
+│   ├── src/
+│   │   └── assets/
+│   └── ...
 └── docs/
-    ├── er_diagram.png
-    └── data_dictionary.md
+    └── ...
 ```
 
-The `.env` file contains local database settings and must not be uploaded to GitHub. Some files, such as the ILP module, tests, and machine-learning script, will be added as development progresses.
+**Important:** Keep your local `.env` file private. Never commit database passwords, secret API keys, or credentials to GitHub.
 
-## 7. Installation and Setup
+## 💻 8. Local Installation and Setup
 
-1. Install Python 3.11 or newer.
-2. Install PostgreSQL 16 and pgAdmin 4.
-3. Install Visual Studio Code and Git.
-4. Clone this repository to your computer.
-5. Create a Python virtual environment.
-6. Install the packages listed in `requirements.txt`.
-7. Create a PostgreSQL database named `resqflow`.
-8. Execute `database/schema.sql` and then `database/sample_data.sql` in that database.
-9. Configure your local `.env` file with your database connection details.
-10. Start the FastAPI backend from the `backend` folder.
-11. Open the SOS page and dispatcher dashboard in your browser.
-12. Run the automated tests and verify the project using fictional sample incidents.
+### Prerequisites
 
-Detailed instructions and required commands will be added as the project is implemented.
+Install the following software:
 
-## 8. Limitations
+- Python 3.11 or newer
+- PostgreSQL and pgAdmin 4
+- Node.js and npm
+- Visual Studio Code
+- Git
 
-- The project is an academic prototype and is not connected to real emergency services.
-- The sample incident and resource data are fictional.
-- The estimated travel times are calculated from straight-line distances and assumed speeds, not actual road routes.
-- Machine-learning experiments use synthetic data and do not establish real-world prediction accuracy.
-- Resource recommendations require dispatcher review and confirmation.
+### Step 1: Clone the repository
 
-## 9. Team Members
+```bash
+git clone https://github.com/saeesukale6-creator/ResQFlow.git
+cd ResQFlow
+```
 
-| Name | Roll Number | 
+### Step 2: Create a Python virtual environment
+
+```bash
+python -m venv venv
+```
+
+Activate it on Windows PowerShell:
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+If PowerShell blocks script execution, use Command Prompt and activate with:
+
+```cmd
+venv\Scripts\activate.bat
+```
+
+### Step 3: Install Python dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 4: Install frontend dependencies
+
+Open a terminal in the `frontend` directory:
+
+```bash
+cd frontend
+npm install
+```
+
+### Step 5: Configure the database
+
+1. Create a PostgreSQL database named `resqflow`.
+2. Configure the database connection using your local environment variables.
+3. Use the appropriate SQL schema and setup scripts available in the repository.
+4. Verify that the backend can connect to PostgreSQL.
+
+Do not use production credentials in your local development files or upload them to GitHub.
+
+### Step 6: Start the application
+
+Start the backend using the entry point and command appropriate for the current project configuration. For example, if `main.py` exposes a FastAPI application named `app`:
+
+```bash
+uvicorn main:app --reload
+```
+
+Start the frontend in a separate terminal:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open the local development URL displayed by Vite in your terminal.
+
+*Note: The exact database configuration, environment variable names, and startup commands must match the files currently present in the repository.*
+
+## ☁️ 9. Deployment
+
+ResQFlow uses separate deployment services for the frontend and backend.
+
+| Service | Platform | Link |
 |---|---|---|
-| Nikita Kulkarni | 1262241563 | 
-| Saee Sukale | 1262241881 | 
+| Live Website | Vercel | https://resqflow-emergency-eosin.vercel.app/ |
+| Backend API | Render | https://resqflow-backend-sfry.onrender.com |
+| API Documentation | FastAPI / Swagger UI | https://resqflow-backend-sfry.onrender.com/docs |
+| Source Code | GitHub | https://github.com/saeesukale6-creator/ResQFlow |
 
-Replace the example details with your actual team information and update responsibilities according to the work you both perform.
+The frontend uses the backend API to send and retrieve emergency data. The backend connects to the hosted PostgreSQL database.
 
-## 10. Academic Project Disclaimer
+## 🧪 10. Testing and Validation
 
-ResQFlow is intended for learning, demonstration, and academic evaluation. It must not be used to handle real emergency calls or replace official emergency response services.
+The application can be evaluated through the following checks:
+
+- Verify that the website loads correctly.
+- Confirm that emergency records can be submitted through the API.
+- Check that submitted records are stored in PostgreSQL.
+- Verify that existing emergency records can be retrieved.
+- Test invalid input and error handling.
+- Check that the frontend can communicate with the deployed backend.
+- Test resource allocation and assignment logic as those modules are implemented.
+
+Optimization and machine-learning experiments should be evaluated separately when their corresponding modules are available.
+
+## ⚠️ 11. Limitations
+
+- ResQFlow is an academic prototype, not a production emergency dispatch system.
+- Sample incident and resource information may be fictional.
+- Straight-line distance is not equivalent to actual road travel distance or travel time.
+- Recommendations depend on the quality and availability of recorded resource data.
+- Machine-learning experiments using synthetic data cannot establish real-world prediction accuracy.
+- Resource recommendations require appropriate dispatcher review and confirmation.
+- The application is not integrated with official emergency services.
+
+## 👩‍💻 12. Team Members
+
+| Sr. No. | Name | Roll Number |
+|:---:|---|:---:|
+| 1 | Nikita Kulkarni | 1262241563 |
+| 2 | Saee Sukale | 1262241881 |
+
+## 🎓 13. Academic Project Disclaimer
+
+ResQFlow is developed for educational purposes, demonstration, and academic evaluation. It is intended to illustrate the use of web technologies, databases, APIs, and emergency resource management concepts.
+
+It must not be used to handle real emergency calls, dispatch actual response teams, or replace official emergency response services.
+
+**For real emergencies in India, call 112.**
+
+---
+
+<p align="center">
+
+  **ResQFlow — Supporting Smarter Emergency Response Management**
+
+  Developed as an academic project.
+
+</p>
